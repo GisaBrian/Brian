@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cyber Duel - 2 Players</title>
+<style>
+
+body{
+    margin:0;
+    background:black;
+}
+
+canvas{
+    display:block;
+    margin:auto;
+    background:#111;
+    border:2px solid white;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// ================= PLAYER 1 =================
+
+let player1 = {
+    x:100,
+    y:200,
+    width:40,
+    height:40,
+    color:"cyan",
+    speed:5,
+    health:100
+};
+
+// ================= PLAYER 2 =================
+
+let player2 = {
+    x:650,
+    y:200,
+    width:40,
+    height:40,
+    color:"red",
+    speed:5,
+    health:100
+};
+// ================= KEY CONTROL =================
+
+let keys = {};
+
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+// ================= MOVEMENT =================
+
+function movePlayers(){
+
+    // PLAYER 1 (WASD)
+    if(keys["w"]) player1.y -= player1.speed;
+    if(keys["s"]) player1.y += player1.speed;
+    if(keys["a"]) player1.x -= player1.speed;
+    if(keys["d"]) player1.x += player1.speed;
+
+    // PLAYER 2 (ARROWS)
+    if(keys["ArrowUp"]) player2.y -= player2.speed;
+    if(keys["ArrowDown"]) player2.y += player2.speed;
+    if(keys["ArrowLeft"]) player2.x -= player2.speed;
+    if(keys["ArrowRight"]) player2.x += player2.speed;
+
+}
+
+// ================= COLLISION =================
+
+function collision(a,b){
+
+return(
+a.x < b.x + b.width &&
+a.x + a.width > b.x &&
+a.y < b.y + b.height &&
+a.y + a.height > b.y
+);
+
+}
+
+// ================= DAMAGE =================
+
+function damage(){
+
+    if(collision(player1, player2)){
+        player1.health -= 0.5;
+        player2.health -= 0.5;
+    }
+
+}
+
+// ================= DRAW =================
+
+function drawPlayer(player){
+
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+}
+
+function drawUI(){
+
+    ctx.fillStyle="white";
+    ctx.font="18px Arial";
+
+    ctx.fillText("Player 1 Health: " + Math.floor(player1.health), 10, 20);
+    ctx.fillText("Player 2 Health: " + Math.floor(player2.health), 600, 20);
+
+}
+
+// ================= WINNER =================
+
+function checkWinner(){
+
+    if(player1.health <= 0){
+
+        ctx.fillStyle="red";
+        ctx.font="40px Arial";
+        ctx.fillText("PLAYER 2 WINS!", 280, 250);
+        return true;
+
+    }
+
+    if(player2.health <= 0){
+
+        ctx.fillStyle="cyan";
+        ctx.font="40px Arial";
+        ctx.fillText("PLAYER 1 WINS!", 280, 250);
+        return true;
+
+    }
+
+    return false;
+
+}
+
+// ================= GAME LOOP =================
+
+function gameLoop(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(checkWinner()) return;
+
+    movePlayers();
+
+    damage();
+
+    drawPlayer(player1);
+    drawPlayer(player2);
+
+    drawUI();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
