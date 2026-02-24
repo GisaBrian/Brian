@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Brian Dash - 5 Level Elite</title>
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    font-family:Arial;
+    text-align:center;
+    color:white;
+}
+h1{margin:10px;}
+canvas{
+    display:block;
+    margin:auto;
+    background:linear-gradient(#1f4068,#16213e);
+    border:3px solid white;
+    border-radius:10px;
+}
+#messageBox{
+    position:absolute;
+    width:100%;
+    top:40%;
+    display:none;
+}
+button{
+    padding:10px 20px;
+    font-size:18px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>🏃‍♂️ BRIAN DASH - 5 LEVEL ELITE</h1>
+<canvas id="gameCanvas" width="900" height="400"></canvas>
+
+<div id="messageBox">
+    <h2 id="messageText"></h2>
+    <button onclick="continueGame()">Continue</button>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let gravity = 0.8;
+let gameSpeed = 9; 
+let score = 0;
+let level = 1;
+let gameRunning = true;
+
+const levelTargets = {
+    1:50,
+    2:100,
+    3:170,
+    4:250,
+    5:350
+};
+
+const levelSpeeds = {
+    1:9,
+    2:12,
+    3:15,
+    4:18,
+    5:22
+};
+
+let player = {
+    x:100,
+    y:300,
+    width:40,
+    height:40,
+    velocityY:0,
+    jumping:false
+};
+
+let obstacles = [];
+
+document.addEventListener("keydown", function(e){
+    if(e.code === "Space" && !player.jumping && gameRunning){
+        player.velocityY = -15;
+        player.jumping = true;
+    }
+});
+
+function randomColor(){
+    const colors = ["#ff4d6d","#00f5d4","#f9c74f","#90be6d","#f72585","#4cc9f0","#7209b7"];
+    return colors[Math.floor(Math.random()*colors.length)];
+}
+
+function spawnObstacle(){
+    if(!gameRunning) return;
+
+    let type = Math.floor(Math.random()*3);
+    let size = 25 + Math.random()*40;
+
+    obstacles.push({
+        x: canvas.width,
+        y: 340 - size,
+        width: size,
+        height: size,
+        type: type,
+        color: randomColor()
+    });
+}
+
+setInterval(spawnObstacle, 1000);
+
+function update(){
+    if(!gameRunning) return;
+
+    player.velocityY += gravity;
+    player.y += player.velocityY;
+
+    if(player.y >= 300){
+        player.y = 300;
+        player.jumping = false;
+    }
+
+    obstacles.forEach((obs, index)=>{
+        obs.x -= gameSpeed;
+
+        if(player.x < obs.x + obs.width &&
+           player.x + player.width > obs.x &&
+           player.y < obs.y + obs.height &&
+           player.y + player.height > obs.y){
+            endGame();
+        }
+
+        if(obs.x + obs.width < 0){
+            obstacles.splice(index,1);
+            score++;
+        }
+    });
+
+    checkLevelProgress();
+}
+
+function checkLevelProgress(){
+    if(score >= levelTargets[level]){
+        gameRunning = false;
+
+        if(level < 5){
+            showMessage("🔥 LEVEL " + level + " COMPLETE!\nYou are evolving, CHAMP!");
+        } else {
+            showMessage("🏆 YOU COMPLETED ALL 5 LEVELS!\nYOU ARE A TRUE ELITE LEGEND!");
+        }
+    }
+}
+
+function showMessage(text){
+    document.getElementById("messageText").innerText = text;
+    document.getElementById("messageBox").style.display="block";
+}
+
+function continueGame(){
+    document.getElementById("messageBox").style.display="none";
+
+    if(level < 5){
+        level++;
+        gameSpeed = levelSpeeds[level];
+        gameRunning = true;
+    } else {
+        restartGame();
+    }
+}
+
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle="#0f3460";
+    ctx.fillRect(0,340,canvas.width,60);
+
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    obstacles.forEach(obs=>{
+        ctx.fillStyle = obs.color;
+
+        if(obs.type === 0){
+            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        }
+        else if(obs.type === 1){
+            ctx.beginPath();
+            ctx.arc(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, 0, Math.PI*2);
+            ctx.fill();
+        }
+        else{
+            ctx.beginPath();
+            ctx.moveTo(obs.x, obs.y + obs.height);
+            ctx.lineTo(obs.x + obs.width/2, obs.y);
+            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+            ctx.closePath();
+            ctx.fill();
+        }
+    });
+
+    ctx.fillStyle="white";
+    ctx.font="20px Arial";
+    ctx.fillText("Score: " + score, 20,30);
+    ctx.fillText("Level: " + level, 800,30);
+}
+
+function gameLoop(){
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+    gameRunning = false;
+    showMessage("💀 GAME OVER!\nRestart and rise stronger!");
+}
+
+function restartGame(){
+    score = 0;
+    level = 1;
+    gameSpeed = levelSpeeds[1];
+    obstacles = [];
+    player.y = 300;
+    player.velocityY = 0;
+    gameRunning = true;
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
